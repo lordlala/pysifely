@@ -6,9 +6,9 @@ from typing import Dict, Any, Optional
 import aiohttp
 from aiohttp import TCPConnector, ClientSession, ContentTypeError
 
-#from wyzeapy.const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO
-#from wyzeapy.exceptions import UnknownApiError, AccessTokenError, TwoFactorAuthenticationEnabled
-#from wyzeapy.utils import create_password, check_for_errors_standard
+from pysifely.const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO, CONTENTTYPE
+from pysifely.exceptions import UnknownApiError, AccessTokenError, TwoFactorAuthenticationEnabled
+from pysifely.utils import create_password, check_for_errors_standard
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,9 +17,9 @@ class Token:
     # Token is good for 216,000 seconds (60 hours) but 48 hours seems like a reasonable refresh interval
     REFRESH_INTERVAL = 172800
 
-    def __init__(self, access_token, refresh_token, refresh_time: float = None):
+    def __init__(self, access_token, refresh_time: float = None):
         self._access_token: str = access_token
-        self._refresh_token: str = refresh_token
+        #self._refresh_token: str = refresh_token
         if refresh_time:
             self._refresh_time: float = refresh_time
         else:
@@ -47,9 +47,9 @@ class Token:
         return self._refresh_time
 
 
-class WyzeAuthLib:
+class PySifelyAuthLib:
     token: Optional[Token] = None
-    SANITIZE_FIELDS = ["email", "password", "access_token", "refresh_token"]
+    SANITIZE_FIELDS = ["username", "password", "access_token", "refresh_token"]
     SANITIZE_STRING = "**Sanitized**"
 
     def __init__(self, username=None, password=None, token: Token = None, token_callback=None):
@@ -78,21 +78,21 @@ class WyzeAuthLib:
         self._username = username
         self._password = create_password(password)
         login_payload = {
-            "email": self._username,
+            "username": self._username,
             "password": self._password
         }
 
         headers = {
-            'Phone-Id': PHONE_ID,
+            'Content-Type': CONTENTTYPE,
             'User-Agent': APP_INFO,
             'X-API-Key': API_KEY,
         }
 
-        response_json = await self.post("https://auth-prod.api.wyze.com/user/login", headers=headers,
+        response_json = await self.post("https://pro-server.sifely.com/login", headers=headers,
                                         json=login_payload)
 
         if response_json.get('errorCode') is not None:
-            _LOGGER.error(f"Unable to login with response from Wyze: {response_json}")
+            _LOGGER.error(f"Unable to login with response from Sifely: {response_json}")
             raise UnknownApiError(response_json)
 
         if response_json.get('mfa_options') is not None:
@@ -116,7 +116,7 @@ class WyzeAuthLib:
                 self.session_id = response_json['session_id']
                 raise TwoFactorAuthenticationEnabled
 
-        self.token = Token(response_json['access_token'], response_json['refresh_token'])
+        self.token = Token(response_json['Token'], response_json['refresh_token'])
         await self.token_callback(self.token)
         return self.token
 
