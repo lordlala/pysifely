@@ -1,8 +1,8 @@
 import hashlib
 from typing import Dict, Any, List, Optional
 
-from pysifely.exceptions import ParameterError, AccessTokenError, UnknownApiError
-from pysifely.types import ResponseCodes, PropertyIDs, Device, Event
+from .exceptions import ParameterError, AccessTokenError, UnknownApiError
+from .types import ResponseCodes, PropertyIDs, Device, Event
 
 
 def create_password(password: str) -> str:

@@ -6,9 +6,9 @@ from typing import Dict, Any, Optional
 import aiohttp
 from aiohttp import TCPConnector, ClientSession, ContentTypeError
 
-from pysifely.const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO, CONTENTTYPE
-from pysifely.exceptions import UnknownApiError, AccessTokenError, TwoFactorAuthenticationEnabled
-from pysifely.utils import create_password, check_for_errors_standard
+from .const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO, CONTENTTYPE
+from .exceptions import UnknownApiError, AccessTokenError, TwoFactorAuthenticationEnabled
+from .utils import create_password, check_for_errors_standard
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class PySifelyAuthLib:
         headers = {
             'Content-Type': CONTENTTYPE,
             'User-Agent': APP_INFO,
-            'X-API-Key': API_KEY,
+            #'X-API-Key': API_KEY,
         }
 
         response_json = await self.post("https://pro-server.sifely.com/login", headers=headers,
@@ -116,7 +116,7 @@ class PySifelyAuthLib:
                 self.session_id = response_json['session_id']
                 raise TwoFactorAuthenticationEnabled
 
-        self.token = Token(response_json['Token'], response_json['refresh_token'])
+        self.token = Token(response_json['Token'])
         await self.token_callback(self.token)
         return self.token
 

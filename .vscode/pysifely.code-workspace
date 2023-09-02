@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.windows": {
+			"PYTHONPATH": "${workspaceFolder}/src;${workspaceFolder}/tests"
+		},
+		"python.envFile": "${workspaceFolder}/.env",
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": []
+	}
+}
