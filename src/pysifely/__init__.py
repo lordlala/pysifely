@@ -61,7 +61,7 @@ class Pysifely:
     @classmethod
     async def create(cls):
         """
-        Creates the Wyzeapy class in an async way. Although this is not currently utilized
+        Creates the Pysifely class in an async way. Although this is not currently utilized
 
         :return: An instance of the Wyzeapy class
         """
