@@ -437,7 +437,6 @@ class BaseService:
         if len(response_json["data"]["list"]) != 0:
 
             total = response_json["data"]["total"]
-            #index = total - 1
 
             for index in range(total):
                 response_json["data"]["list"][index]['product_type'] = "gateway"
@@ -467,7 +466,6 @@ class BaseService:
         if len(response_json["data"]["list"]) != 0:
 
             total = response_json["data"]["total"]
-            #index = total - 1
 
             for index in range(total):
                 response_json["data"]["list"][index]['product_type'] = "Lock"
@@ -506,7 +504,6 @@ class BaseService:
         if len(response_json["data"]["list"]) != 0:
 
             total = response_json["data"]["total"]
-            #index = total - 1
 
             for index in range(total):
                 response_json["data"]["list"][index]['product_type'] = "Lock"
