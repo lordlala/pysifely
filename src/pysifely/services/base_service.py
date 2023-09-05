@@ -43,21 +43,16 @@ class BaseService:
     async def get_user_profile(self) -> Dict[Any, Any]:
         await self._auth_lib.refresh_if_should()
 
-        payload = olive_create_user_info_payload()
-        signature = olive_create_signature(payload, self._auth_lib.token.access_token)
+        #payload = olive_create_user_info_payload()
+        #signature = olive_create_signature(payload, self._auth_lib.token.access_token)
         headers = {
-            'Accept-Encoding': 'gzip',
-            'User-Agent': 'myapp',
-            'appid': OLIVE_APP_ID,
-            'appinfo': APP_INFO,
-            'phoneid': PHONE_ID,
-            'access_token': self._auth_lib.token.access_token,
-            'signature2': signature
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
         }
 
-        url = 'https://wyze-platform-service.wyzecam.com/app/v2/platform/get_user_profile'
+        url = 'https://pro-server.sifely.com/getInfo'
 
-        response_json = await self._auth_lib.get(url, headers=headers, params=payload)
+        response_json = await self._auth_lib.get(url, headers=headers)
 
         return response_json
 
