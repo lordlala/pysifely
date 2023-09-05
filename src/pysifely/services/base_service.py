@@ -12,7 +12,6 @@ from ..utils import check_for_errors_standard, check_for_errors_hms, check_for_e
     check_for_errors_thermostat
 from ..sifely_auth_lib import PySifelyAuthLib
 
-
 class BaseService:
     _devices: Optional[List[Device]] = None
 
