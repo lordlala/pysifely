@@ -28,7 +28,7 @@ from .payload_factory import olive_create_user_info_payload
 from .services.base_service import BaseService
 from .services.gateway_service import GatewayService
 from .services.lock_service import LockService
-from .types import MacTypes
+from .types import MacTypes, Map
 #from wyzeapy.services.hms_service import HMSService
 #from wyzeapy.services.lock_service import LockService
 #from wyzeapy.services.sensor_service import SensorService
@@ -150,7 +150,7 @@ class Pysifely:
 
         devices = await self._service.get_object_list()
         device_ids = set()
-        for device in devices:
+        for device in self._service._devices:
             device_ids.add(device.mac)
 
         return device_ids

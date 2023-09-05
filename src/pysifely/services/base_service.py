@@ -63,8 +63,9 @@ class BaseService:
         gateways = await self._get_gateway_list(Device)
         lockgroups = await self._get_lock_groups(Device)
         locks = await self._get_lock_by_groupid(Device)
-
+        devices = []
         devices = gateways + lockgroups + locks
+        
 
         #try:
         BaseService._devices = [Device(device) for device in devices]
