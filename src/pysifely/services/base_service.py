@@ -56,11 +56,6 @@ class BaseService:
         return response_json
 
     async def get_object_list(self) -> List[Device]:
-        """
-        Wraps the api.wyzecam.com/app/v2/home_page/get_object_list endpoint
-
-        :return: List of devices
-        """
         await self._auth_lib.refresh_if_should()
 
         payload = {
@@ -76,12 +71,16 @@ class BaseService:
             'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
         }
 
-        response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/gateway/list",
-                                                  headers=headers, data=payload)
+        await self._get_gateway_list(Device)
+        await self._get_lock_groups(Device)
+        await self._get_lock_by_groupid(Device)
 
-        check_for_errors_standard(response_json)
+        #response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/gateway/list",
+                                                  #headers=headers, data=payload)
 
-        return [Device(device) for device in response_json['data']['list']]
+        #check_for_errors_standard(response_json)
+
+        return [Device(device) for device in self._devices]
 
     async def _get_property_list(self, device: Device) -> List[Tuple[PropertyIDs, Any]]:
         """
@@ -418,6 +417,69 @@ class BaseService:
 
         check_for_errors_hms(response_json)
         return response_json
+
+    async def _get_gateway_list(self, device: Device):
+        await self._auth_lib.refresh_if_should()
+
+        payload = {
+            'groupId' : '0',
+            'pageNo' : '1',
+            'pageSize' : '10'
+        }
+
+        headers = {
+            'Accept' : 'application/json, text/plain, */*',
+            'Accept-Encoding' : 'gzip, deflate, br',
+            'Accept-Language' : 'en-US,en;q=0.9',
+            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
+        }
+
+        response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/gateway/list",
+                                                  headers=headers, data=payload)
+
+        check_for_errors_standard(response_json)
+
+        return [Device(device) for device in response_json['data']['list']]
+
+    async def _get_lock_groups(self, device: Device):
+        await self._auth_lib.refresh_if_should()
+
+        headers = {
+            'Accept' : 'application/json, text/plain, */*',
+            'Accept-Encoding' : 'gzip, deflate, br',
+            'Accept-Language' : 'en-US,en;q=0.9',
+            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
+        }
+
+        response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/lock/getGroupByForLock",
+                                                  headers=headers)
+
+        check_for_errors_standard(response_json)
+
+        return [Device(device) for device in response_json['data']['list']]
+
+    async def _get_lock_by_groupid(self, device: Device, groupid = 0):
+        await self._auth_lib.refresh_if_should()
+
+        headers = {
+            'Accept' : 'application/json, text/plain, */*',
+            'Accept-Encoding' : 'gzip, deflate, br',
+            'Accept-Language' : 'en-US,en;q=0.9',
+            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
+        }
+
+        payload = {
+            'groupId' : groupid,
+            'pageNo' : '1',
+            'pageSize' : '10'
+        }
+
+        response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/lock/getLockByGroupId",
+                                                  headers=headers, data=payload)
+
+        check_for_errors_standard(response_json)
+
+        return [Device(device) for device in response_json['data']['list']]
 
     async def _lock_control(self, device: Device, action: str) -> None:
         await self._auth_lib.refresh_if_should()

@@ -61,8 +61,7 @@ class Device:
             return DeviceTypes.UNKNOWN
 
     def __repr__(self) -> str:
-        return "<Device: {}, {}>".format(DeviceTypes(self.product_type), self.mac)
-
+        return "<Device: {}, {}>".format("Lock", self.lockMac)
 
 class Sensor(Device):
     def __init__(self, dictionary: Dict[Any, Any]):

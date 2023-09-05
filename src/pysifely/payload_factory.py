@@ -8,10 +8,10 @@ from .crypto import ford_create_signature
 
 def ford_create_payload(access_token: str, payload: Dict[str, Any],
                         url_path: str, request_method: str) -> Dict[str, Any]:
-    payload["accessToken"] = access_token
-    payload["key"] = FORD_APP_KEY
-    payload["timestamp"] = str(int(time.time() * 1000))
-    payload["sign"] = ford_create_signature(url_path, request_method, payload)
+    payload["Authorization"] = "Bearer {}".format(access_token)
+    #payload["key"] = FORD_APP_KEY
+    #payload["timestamp"] = str(int(time.time() * 1000))
+    #payload["sign"] = ford_create_signature(url_path, request_method, payload)
     return payload
 
 
