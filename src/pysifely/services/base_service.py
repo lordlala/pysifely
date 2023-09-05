@@ -7,7 +7,7 @@ from ..crypto import olive_create_signature
 from ..payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
     olive_create_hms_get_payload, ford_create_payload, olive_create_get_payload, olive_create_post_payload, \
     olive_create_user_info_payload
-from ..types import PropertyIDs, Device, ThermostatProps
+from ..types import PropertyIDs, Device, Group
 from ..utils import check_for_errors_standard, check_for_errors_hms, check_for_errors_lock, \
     check_for_errors_thermostat
 from ..sifely_auth_lib import PySifelyAuthLib
@@ -56,31 +56,22 @@ class BaseService:
         return response_json
 
     async def get_object_list(self) -> List[Device]:
+        #gateways = []
+        #lockgroups = []
+        #locks = []
         await self._auth_lib.refresh_if_should()
+        gateways = await self._get_gateway_list(Device)
+        lockgroups = await self._get_lock_groups(Device)
+        locks = await self._get_lock_by_groupid(Device)
 
-        payload = {
-            'groupId' : '0',
-            'pageNo' : '1',
-            'pageSize' : '10'
-        }
+        devices = gateways + lockgroups + locks
 
-        headers = {
-            'Accept' : 'application/json, text/plain, */*',
-            'Accept-Encoding' : 'gzip, deflate, br',
-            'Accept-Language' : 'en-US,en;q=0.9',
-            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
-        }
+        #try:
+        BaseService._devices = [Device(device) for device in devices]
+        #except:
+        #    pass
 
-        await self._get_gateway_list(Device)
-        await self._get_lock_groups(Device)
-        await self._get_lock_by_groupid(Device)
-
-        #response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/gateway/list",
-                                                  #headers=headers, data=payload)
-
-        #check_for_errors_standard(response_json)
-
-        return [Device(device) for device in self._devices]
+        return devices
 
     async def _get_property_list(self, device: Device) -> List[Tuple[PropertyIDs, Any]]:
         """
@@ -419,6 +410,9 @@ class BaseService:
         return response_json
 
     async def _get_gateway_list(self, device: Device):
+
+        devices = []
+
         await self._auth_lib.refresh_if_should()
 
         payload = {
@@ -439,9 +433,22 @@ class BaseService:
 
         check_for_errors_standard(response_json)
 
-        return [Device(device) for device in response_json['data']['list']]
+        if len(response_json["data"]["list"]) != 0:
+
+            total = response_json["data"]["total"]
+            #index = total - 1
+
+            for index in range(total):
+                response_json["data"]["list"][index]['product_type'] = "gateway"
+                response_json["data"]["list"][index]['mac'] = response_json["data"]["list"][index]['gatewayMac']
+                devices.append(response_json["data"]["list"][index])
+                index = index + 1
+
+        return devices
 
     async def _get_lock_groups(self, device: Device):
+        devices = []
+
         await self._auth_lib.refresh_if_should()
 
         headers = {
@@ -456,9 +463,25 @@ class BaseService:
 
         check_for_errors_standard(response_json)
 
-        return [Device(device) for device in response_json['data']['list']]
+        if len(response_json["data"]["list"]) != 0:
+
+            total = response_json["data"]["total"]
+            #index = total - 1
+
+            for index in range(total):
+                response_json["data"]["list"][index]['product_type'] = "Lock"
+                try:
+                    response_json["data"]["list"][index]['mac'] = response_json["data"]["list"][index]['lockMac']
+                except:
+                    pass
+                devices.append(response_json["data"]["list"][index])
+                index = index + 1
+
+        return devices
 
     async def _get_lock_by_groupid(self, device: Device, groupid = 0):
+        devices = []
+
         await self._auth_lib.refresh_if_should()
 
         headers = {
@@ -479,7 +502,18 @@ class BaseService:
 
         check_for_errors_standard(response_json)
 
-        return [Device(device) for device in response_json['data']['list']]
+        if len(response_json["data"]["list"]) != 0:
+
+            total = response_json["data"]["total"]
+            #index = total - 1
+
+            for index in range(total):
+                response_json["data"]["list"][index]['product_type'] = "Lock"
+                response_json["data"]["list"][index]['mac'] = response_json["data"]["list"][index]['lockMac']
+                devices.append(response_json["data"]["list"][index])
+                index = index + 1
+
+        return devices
 
     async def _lock_control(self, device: Device, action: str) -> None:
         await self._auth_lib.refresh_if_should()

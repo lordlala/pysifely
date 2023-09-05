@@ -61,7 +61,7 @@ class Device:
             return DeviceTypes.UNKNOWN
 
     def __repr__(self) -> str:
-        return "<Device: {}, {}>".format("Lock", self.lockMac)
+        return "<Device: {}, {}>".format(DeviceTypes(self.product_type), self.mac)
 
 class Sensor(Device):
     def __init__(self, dictionary: Dict[Any, Any]):
@@ -184,10 +184,6 @@ class HMSStatus(Enum):
     HOME = 'home'
     AWAY = 'away'
 
-
-
-
-
-
-
-
+class MacTypes(Enum):
+    locks = 'lockMac'
+    gateways = 'gatewayMac'
