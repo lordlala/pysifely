@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class Pysifely:
     """A module to assist developers in interacting with the Wyze service"""
-    # _client: Client
+    #_client: Client
     _auth_lib: PySifelyAuthLib
 
     def __init__(self):

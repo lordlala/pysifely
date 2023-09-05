@@ -76,7 +76,7 @@ class PySifelyAuthLib:
 
     async def get_token_with_username_password(self, username, password) -> Token:
         self._username = username
-        self._password = create_password(password)
+        self._password = password
         login_payload = {
             "username": self._username,
             "password": self._password
@@ -116,7 +116,7 @@ class PySifelyAuthLib:
                 self.session_id = response_json['session_id']
                 raise TwoFactorAuthenticationEnabled
 
-        self.token = Token(response_json['Token'])
+        self.token = Token(response_json['token'])
         await self.token_callback(self.token)
         return self.token
 

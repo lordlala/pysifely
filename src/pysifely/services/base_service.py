@@ -2,15 +2,15 @@ import json
 import time
 from typing import List, Tuple, Any, Dict, Optional
 
-from pysifely.const import PHONE_SYSTEM_TYPE, APP_VERSION, APP_VER, PHONE_ID, APP_NAME, OLIVE_APP_ID, APP_INFO, SC, SV
-from pysifely.crypto import olive_create_signature
-from pysifely.payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
+from ..const import PHONE_SYSTEM_TYPE, APP_VERSION, APP_VER, PHONE_ID, APP_NAME, OLIVE_APP_ID, APP_INFO, SC, SV
+from ..crypto import olive_create_signature
+from ..payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
     olive_create_hms_get_payload, ford_create_payload, olive_create_get_payload, olive_create_post_payload, \
     olive_create_user_info_payload
-from pysifely.types import PropertyIDs, Device, ThermostatProps
-from pysifely.utils import check_for_errors_standard, check_for_errors_hms, check_for_errors_lock, \
+from ..types import PropertyIDs, Device, ThermostatProps
+from ..utils import check_for_errors_standard, check_for_errors_hms, check_for_errors_lock, \
     check_for_errors_thermostat
-from pysifely.sifely_auth_lib import PySifelyAuthLib
+from ..sifely_auth_lib import PySifelyAuthLib
 
 
 class BaseService:
