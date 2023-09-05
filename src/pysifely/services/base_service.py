@@ -65,23 +65,24 @@ class BaseService:
         await self._auth_lib.refresh_if_should()
 
         payload = {
-            "phone_system_type": PHONE_SYSTEM_TYPE,
-            "app_version": APP_VERSION,
-            "app_ver": APP_VER,
-            "sc": "9f275790cab94a72bd206c8876429f3c",
-            "ts": int(time.time()),
-            "sv": "9d74946e652647e9b6c9d59326aef104",
-            "access_token": self._auth_lib.token.access_token,
-            "phone_id": PHONE_ID,
-            "app_name": APP_NAME
+            'groupId' : '0',
+            'pageNo' : '1',
+            'pageSize' : '10'
         }
 
-        response_json = await self._auth_lib.post("https://api.wyzecam.com/app/v2/home_page/get_object_list",
-                                                  json=payload)
+        headers = {
+            'Accept' : 'application/json, text/plain, */*',
+            'Accept-Encoding' : 'gzip, deflate, br',
+            'Accept-Language' : 'en-US,en;q=0.9',
+            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
+        }
+
+        response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/gateway/list",
+                                                  headers=headers, data=payload)
 
         check_for_errors_standard(response_json)
 
-        return [Device(device) for device in response_json['data']['device_list']]
+        return [Device(device) for device in response_json['data']['list']]
 
     async def _get_property_list(self, device: Device) -> List[Tuple[PropertyIDs, Any]]:
         """

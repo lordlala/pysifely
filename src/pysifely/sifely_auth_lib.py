@@ -210,7 +210,7 @@ class PySifelyAuthLib:
             _LOGGER.debug(f"headers: {self.sanitize(headers)}")
             _LOGGER.debug(f"data: {self.sanitize(data)}")
             # Log the response.json() if it exists, if not log the response.
-            try: 
+            try:
                 response_json = await response.json()
                 _LOGGER.debug(f"Response Json: {response_json}")
             except ContentTypeError:
