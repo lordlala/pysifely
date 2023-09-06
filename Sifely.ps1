@@ -10,8 +10,8 @@ Function Get-SifelyToken {
 
     [cmdletbinding()]
     Param (
-        [String]$Username = "jasondanieladams@gmail.com",
-        [String]$Password = "Bonzai1957!"
+        [String]$Username = "**@gmail.com",
+        [String]$Password = "((!"
     )
 
     $Payload = @{
