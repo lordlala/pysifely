@@ -95,27 +95,6 @@ class PySifelyAuthLib:
             _LOGGER.error(f"Unable to login with response from Sifely: {response_json}")
             raise UnknownApiError(response_json)
 
-        if response_json.get('mfa_options') is not None:
-            # Store the TOTP verification setting in the token and raise exception
-            if "TotpVerificationCode" in response_json.get("mfa_options"):
-                self.two_factor_type = "TOTP"
-                # Store the verification_id from the response, it's needed for the 2fa payload.
-                self.verification_id = response_json["mfa_details"]["totp_apps"][0]["app_id"]
-                raise TwoFactorAuthenticationEnabled
-                # 2fa using SMS, store sms as 2fa method in token, send the code then raise exception
-            if "PrimaryPhone" in response_json.get("mfa_options"):
-                self.two_factor_type = "SMS"
-                params = {
-                    'mfaPhoneType': 'Primary',
-                    'sessionId': response_json.get("sms_session_id"),
-                    'userId': response_json['user_id'],
-                }
-                response_json = await self.post('https://auth-prod.api.wyze.com/user/login/sendSmsCode',
-                                                headers=headers, data=params)
-                # Store the session_id from this response, it's needed for the 2fa payload.
-                self.session_id = response_json['session_id']
-                raise TwoFactorAuthenticationEnabled
-
         self.token = Token(response_json['token'])
         await self.token_callback(self.token)
         return self.token

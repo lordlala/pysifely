@@ -7,7 +7,6 @@ class Group:
     groupName: str
 
     def __init__(self, dictionary: Dict[Any, Any]):
-        #dictionary.__dict__
         for k, v in dictionary.items():
             setattr(self, k, v)
 

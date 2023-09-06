@@ -13,14 +13,14 @@ class LockService(BaseService):
         device_info = await self._get_lock_info(lock)
         lock.raw_dict = device_info["device"]
 
-        lock.available = lock.raw_dict.get("onoff_line") == 1
-        lock.door_open = lock.raw_dict.get("door_open_status") == 1
+        lock.available = lock.raw_dict.get("available") == 1
+        lock.door_open = lock.raw_dict.get("door_open") == 1
         lock.trash_mode = lock.raw_dict.get("trash_mode") == 1
 
         # store the nested dict for easier reference below
-        locker_status = lock.raw_dict.get("locker_status")
+        lock.unlocked = lock.raw_dict.get("unlocked")
         # Check if the door is locked
-        lock.unlocked = locker_status.get("hardlock") == 2
+        #lock.unlocked = locker_status.get("hardlock") == 2
 
         return lock
 
@@ -33,7 +33,7 @@ class LockService(BaseService):
         return [Lock(device.raw_dict) for device in locks]
 
     async def lock(self, lock: Lock):
-        await self._lock_control(lock, "remoteLock")
+        await self._lock_control(lock, "Lock")
 
     async def unlock(self, lock: Lock):
-        await self._lock_control(lock, "remoteUnlock")
+        await self._lock_control(lock, "Unlock")

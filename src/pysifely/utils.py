@@ -24,7 +24,7 @@ def check_for_errors_standard(response_json: Dict[str, Any]) -> None:
 
 
 def check_for_errors_lock(response_json: Dict[str, Any]) -> None:
-    if response_json['ErrNo'] != 0:
+    if (('ErrNo' in response_json) and (response_json['ErrNo'] != 0)):
         if response_json.get('code') == ResponseCodes.PARAMETER_ERROR.value:
             raise ParameterError
         elif response_json.get('code') == ResponseCodes.ACCESS_TOKEN_ERROR.value:

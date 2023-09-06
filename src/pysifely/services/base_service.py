@@ -63,7 +63,7 @@ class BaseService:
         locks = await self._get_lock_by_groupid(Device)
         devices = []
         devices = gateways + locks
-        
+
         BaseService._devices = [Device(device) for device in devices]
         BaseService._lock_groups = [Group(group.__dict__) for group in lockgroups]
 
@@ -511,21 +511,26 @@ class BaseService:
     async def _lock_control(self, device: Device, action: str) -> None:
         await self._auth_lib.refresh_if_should()
 
-        url_path = "/openapi/lock/v1/control"
-
-        device_uuid = device.mac.split(".")[2]
+        headers = {
+            'Accept' : 'application/json, text/plain, */*',
+            'Accept-Encoding' : 'gzip, deflate, br',
+            'Accept-Language' : 'en-US,en;q=0.9',
+            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token),
+            'Content-Type' : 'application/x-www-form-urlencoded'
+        }
 
         payload = {
-            "uuid": device_uuid,
-            "action": action  # "remoteLock" or "remoteUnlock"
+            "lockId": device.lockId,
+            "date": device.date
         }
-        payload = ford_create_payload(self._auth_lib.token.access_token, payload, url_path, "post")
 
-        url = "https://yd-saas-toc.wyzecam.com/openapi/lock/v1/control"
+        url = "https://pro-server.sifely.com/v3/lock/{}".format(action.lower())
 
-        response_json = await self._auth_lib.post(url, json=payload)
+        response_json = await self._auth_lib.post(url, headers=headers, data=payload)
 
         check_for_errors_lock(response_json)
+
+        return(response_json)
 
     async def _get_device_info(self, device: Device) -> Dict[Any, Any]:
         await self._auth_lib.refresh_if_should()
