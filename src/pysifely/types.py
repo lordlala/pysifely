@@ -3,15 +3,16 @@ from typing import Union, List, Dict, Any
 
 
 class Group:
-    group_id: str
-    group_name: str
+    groupId: str
+    groupName: str
 
     def __init__(self, dictionary: Dict[Any, Any]):
+        #dictionary.__dict__
         for k, v in dictionary.items():
             setattr(self, k, v)
 
     def __repr__(self) -> str:
-        return "<Group: {}, {}>".format(self.group_id, self.group_name)
+        return "<Group: {}, {}>".format(self.groupId, self.groupName)
 
 
 class DeviceTypes(Enum):

@@ -14,6 +14,7 @@ from ..sifely_auth_lib import PySifelyAuthLib
 
 class BaseService:
     _devices: Optional[List[Device]] = None
+    _lock_groups: Optional[List[Group]] = None
 
     def __init__(self, auth_lib: PySifelyAuthLib):
         self._auth_lib = auth_lib
@@ -56,21 +57,15 @@ class BaseService:
         return response_json
 
     async def get_object_list(self) -> List[Device]:
-        #gateways = []
-        #lockgroups = []
-        #locks = []
         await self._auth_lib.refresh_if_should()
         gateways = await self._get_gateway_list(Device)
         lockgroups = await self._get_lock_groups(Device)
         locks = await self._get_lock_by_groupid(Device)
         devices = []
-        devices = gateways + lockgroups + locks
+        devices = gateways + locks
         
-
-        #try:
         BaseService._devices = [Device(device) for device in devices]
-        #except:
-        #    pass
+        BaseService._lock_groups = [Group(group.__dict__) for group in lockgroups]
 
         return devices
 
@@ -465,7 +460,7 @@ class BaseService:
 
         if len(response_json["data"]["list"]) != 0:
 
-            total = response_json["data"]["total"]
+            total = len(response_json["data"]['list'])
 
             for index in range(total):
                 response_json["data"]["list"][index]['product_type'] = "Lock"
@@ -473,7 +468,7 @@ class BaseService:
                     response_json["data"]["list"][index]['mac'] = response_json["data"]["list"][index]['lockMac']
                 except:
                     pass
-                devices.append(response_json["data"]["list"][index])
+                devices.append(Group(response_json["data"]["list"][index]))
                 index = index + 1
 
         return devices
