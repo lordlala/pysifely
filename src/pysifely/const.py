@@ -2,6 +2,8 @@ import uuid
 
 # Here is where all the *magic* lives
 PHONE_SYSTEM_TYPE = "1"
+APP_ID = 'facccadbaa134cf196545d6299a0452c'
+APP_SECRET = 'a1a22e33cff96a26056ca552c63d992d'
 API_KEY = "WMXHYf79Nr5gIlt3r0r7p9Tcw5bvs6BB4U8O8nGJ"
 APP_VERSION = "2.18.43"
 APP_VER = ""
