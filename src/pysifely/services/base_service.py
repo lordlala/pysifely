@@ -61,14 +61,12 @@ class BaseService:
 
     async def get_object_list(self) -> List[Device]:
         await self._auth_lib.refresh_if_should()
-        gateways = await self._get_gateway_list(Device)
-        lockgroups = await self._get_lock_groups(Device)
-        locks = await self._get_lock_by_groupid(Device)
+        
         devices = []
-        devices = gateways + locks
-
-        BaseService._devices = [Device(device) for device in devices]
-        BaseService._lock_groups = [Group(group.__dict__) for group in lockgroups]
+        
+        devices += await self._get_gateway_list(Device)
+        
+        devices += await self._get_sync_data(Device)
 
         return devices
 
@@ -335,7 +333,7 @@ class BaseService:
         """
         Wraps the wyze-membership-service.wyzecam.com/platform/v2/membership/get_plan_binding_list_by_user endpoint
 
-        :return: The response to gathering the plan for the current user
+        # :return: The response to gathering the plan for the current user
         """
 
         if self._auth_lib.should_refresh:
@@ -410,39 +408,38 @@ class BaseService:
 
     async def _get_gateway_list(self, device: Device):
 
-        devices = []
+        await self._auth_lib.refresh_if_should()
+
+        headers = self._auth_lib.token.headers
 
         await self._auth_lib.refresh_if_should()
 
         payload = {
-            'groupId' : '0',
-            'pageNo' : '1',
-            'pageSize' : '10'
+            "d" : f"{round(time.time())}",
+            "pageNo" : "1",
+            "pageSize" : "10",
+            "operatorUid": f"{self._auth_lib.token.uid}"
         }
+        
+        url = f"{BASE_URL}/plug/list"
 
-        headers = {
-            'Accept' : 'application/json, text/plain, */*',
-            'Accept-Encoding' : 'gzip, deflate, br',
-            'Accept-Language' : 'en-US,en;q=0.9',
-            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token)
-        }
-
-        response_json = await self._auth_lib.post("https://pro-server.sifely.com/v3/gateway/list",
+        response_json = await self._auth_lib.post(url=url,
                                                   headers=headers, data=payload)
 
         check_for_errors_standard(response_json)
 
-        if len(response_json["data"]["list"]) != 0:
+        if len(response_json["list"]) != 0:
 
-            total = response_json["data"]["total"]
+            total = response_json["total"]
 
             for index in range(total):
-                response_json["data"]["list"][index]['product_type'] = "gateway"
-                response_json["data"]["list"][index]['mac'] = response_json["data"]["list"][index]['gatewayMac']
-                devices.append(response_json["data"]["list"][index])
+                response_json["list"][index]['product_type'] = "gateway"
+                response_json["list"][index]['mac'] = response_json["list"][index]['networkMac']
                 index = index + 1
+                
+        BaseService._devices = [Device(device) for device in response_json['list']]
 
-        return devices
+        return BaseService._devices
 
     async def _get_lock_groups(self, device: Device):
         devices = []
@@ -582,7 +579,7 @@ class BaseService:
 
         return response_json
 
-    async def _get_sync_data(self) -> List[Device]:
+    async def _get_sync_data(self, device: Device):
         await self._auth_lib.refresh_if_should()
 
         headers = self._auth_lib.token.headers
@@ -606,4 +603,4 @@ class BaseService:
         BaseService._devices = [Device(device) for device in response_json['keyInfos']]
         BaseService._lock_groups = [Group(group) for group in response_json['keyGroups']]
 
-        return response_json
+        return BaseService._devices

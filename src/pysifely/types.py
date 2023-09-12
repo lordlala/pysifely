@@ -51,6 +51,9 @@ class Device:
 
         self.raw_dict = dictionary
         for k, v in dictionary.items():
+            if k == "lockMac":
+                k = "mac"
+                setattr(self, "product_type", "Lock")
             setattr(self, k, v)
 
     @property

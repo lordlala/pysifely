@@ -12,7 +12,7 @@ def create_password(password: str) -> str:
 
 
 def check_for_errors_standard(response_json: Dict[str, Any]) -> None:
-    if response_json['code'] != ResponseCodes.SUCCESS.value:
+    if ('code' in response_json) and (response_json['code']) != ResponseCodes.SUCCESS.value:
         if response_json['code'] == ResponseCodes.PARAMETER_ERROR.value:
             raise ParameterError(response_json)
         elif response_json['code'] == ResponseCodes.ACCESS_TOKEN_ERROR.value:
