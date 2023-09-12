@@ -83,17 +83,17 @@ class PySifelyAuthLib:
         headers = LOGIN_HEADERS
 
         url = f"{BASE_URL}/user/login"
-        
+
         hashpass = hashlib.md5(password.encode('utf8')).hexdigest()
 
         login_payload = {
-            
+
             'loginType': 1,
             'password': hashpass,
             'platId': 2,
             'uniqueid': '65BDFAFE-56FF-42FE-AAA2-DD8A484CFC58',
             'username': username
-            
+
         }
 
         response_json = await self.post(url=url, headers=headers,

@@ -10,14 +10,13 @@ APP_VER = ""
 APP_NAME = ""
 BASE_URL = "https://servlet.ttlock.com"
 PHONE_ID = str(uuid.uuid4())
-APP_INFO = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188' 
+APP_INFO = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188'
 CONTENTTYPE = 'application/json;charset=UTF-8'
 SC = "9f275790cab94a72bd206c8876429f3c"
 SV = "9d74946e652647e9b6c9d59326aef104"
 
 #Request Constants
 LOGIN_HEADERS = {
-    
     'Host': 'servlet.ttlock.com',
     'Accept': '*/*',
     'Expires': '-1',
