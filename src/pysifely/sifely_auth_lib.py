@@ -19,8 +19,10 @@ class Token:
     # Token is good for 216,000 seconds (60 hours) but 48 hours seems like a reasonable refresh interval
     REFRESH_INTERVAL = 172800
 
-    def __init__(self, access_token, refresh_time: float = None):
+    def __init__(self, access_token, refresh_time: float = None, headers: str = None, uid: str = None):
         self._access_token: str = access_token
+        self._headers: str = headers
+        self._uid: str = uid
         #self._refresh_token: str = refresh_token
         if refresh_time:
             self._refresh_time: float = refresh_time
@@ -37,6 +39,15 @@ class Token:
         self._refresh_time = time.time() + Token.REFRESH_INTERVAL
 
     @property
+    def headers(self):
+        return self._headers
+
+    @headers.setter
+    def headers(self, headers):
+        self._headers = headers
+        return self._headers
+
+    @property
     def refresh_token(self):
         return self._refresh_token
 
@@ -48,6 +59,13 @@ class Token:
     def refresh_time(self):
         return self._refresh_time
 
+    @property
+    def uid(self):
+        return self._uid
+
+    @uid.setter
+    def uid(self, uid):
+        self._uid = uid
 
 class PySifelyAuthLib:
     token: Optional[Token] = None
@@ -83,17 +101,17 @@ class PySifelyAuthLib:
         headers = LOGIN_HEADERS
 
         url = f"{BASE_URL}/user/login"
-        
+
         hashpass = hashlib.md5(password.encode('utf8')).hexdigest()
 
         login_payload = {
-            
+
             'loginType': 1,
             'password': hashpass,
             'platId': 2,
             'uniqueid': '65BDFAFE-56FF-42FE-AAA2-DD8A484CFC58',
             'username': username
-            
+
         }
 
         response_json = await self.post(url=url, headers=headers,
@@ -104,7 +122,14 @@ class PySifelyAuthLib:
             raise UnknownApiError(response_json)
 
         self.token = Token(response_json['accessToken'])
+        self.token.uid = response_json['uid']
         await self.token_callback(self.token)
+
+        headers = LOGIN_HEADERS
+        headers['accessToken'] = response_json['accessToken']
+        headers['operatorUid'] = f"{self.token.uid}"
+        self.token.headers = headers
+
         return self.token
 
     async def get_token_with_2fa(self, verification_code) -> Token:
@@ -186,7 +211,7 @@ class PySifelyAuthLib:
                     data[key] = self.SANITIZE_STRING
         return data
 
-    async def post(self, url, json=None, headers=None, data=None, params=None) -> Dict[Any, Any]:
+    async def post(self, url, json=None, headers=None, data=None) -> Dict[Any, Any]:
         async with ClientSession(connector=TCPConnector(ttl_dns_cache=(30 * 60))) as _session:
             response = await _session.post(url, json=json, headers=headers, data=data)
             # Relocated these below as the sanitization seems to modify the data before it goes to the post.
@@ -195,7 +220,6 @@ class PySifelyAuthLib:
             _LOGGER.debug(f"json: {self.sanitize(json)}")
             _LOGGER.debug(f"headers: {self.sanitize(headers)}")
             _LOGGER.debug(f"data: {self.sanitize(data)}")
-            _LOGGER.debug(f"params: {self.sanitize(params)}")
             # Log the response.json() if it exists, if not log the response.
             try:
                 response_json = await response.json()

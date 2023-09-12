@@ -1,8 +1,8 @@
-import json
+import json, requests
 import time
 from typing import List, Tuple, Any, Dict, Optional
 
-from ..const import PHONE_SYSTEM_TYPE, APP_VERSION, APP_VER, BASE_URL, PHONE_ID, APP_NAME, LOGIN_HEADERS, OLIVE_APP_ID, APP_INFO, SC, SV
+from ..const import PHONE_SYSTEM_TYPE, APP_ID, APP_SECRET, APP_VERSION, APP_VER, BASE_URL, PHONE_ID, APP_NAME, LOGIN_HEADERS, OLIVE_APP_ID, APP_INFO, SC, SV, UNIQUE_ID, USER_INFO
 from ..crypto import olive_create_signature
 from ..payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
     olive_create_hms_get_payload, ford_create_payload, olive_create_get_payload, olive_create_post_payload, \
@@ -15,6 +15,8 @@ from ..sifely_auth_lib import PySifelyAuthLib
 class BaseService:
     _devices: Optional[List[Device]] = None
     _lock_groups: Optional[List[Group]] = None
+    _user_info = None
+    _headers = None
 
     def __init__(self, auth_lib: PySifelyAuthLib):
         self._auth_lib = auth_lib
@@ -43,12 +45,17 @@ class BaseService:
     async def get_user_profile(self) -> Dict[Any, Any]:
         await self._auth_lib.refresh_if_should()
 
-        headers = LOGIN_HEADERS
-        headers['accessToken'] = self._auth_lib.token.access_token
+        headers = self._auth_lib.token.headers
 
         url = f"{BASE_URL}/user/getUserInfo"
 
-        response_json = await self._auth_lib.get(url, headers=headers)
+        data = {
+            'operatorUid': f"{self._auth_lib.token.uid}"
+        }
+
+        response_json = await self._auth_lib.post(url, headers=headers, data=data)
+
+        self._user_info = response_json
 
         return response_json
 
@@ -504,6 +511,29 @@ class BaseService:
 
         return devices
 
+    async def _get_lock_list(self, device: Device):
+        devices = []
+
+        await self._auth_lib.refresh_if_should()
+
+        headers = LOGIN_HEADERS
+
+        payload = {
+            "clientId": f"{APP_ID}",
+            "accessToken": f"{self._auth_lib.token.access_token}",
+            #'Authorization': "Bearer {}".format(self._auth_lib.token.access_token),
+            'pageNo' : '1',
+            'pageSize' : '10',
+            "date": f"{round(time.time())}"
+        }
+
+        url = "https://pro-server.sifely.com/v3/lock/list"
+
+        response_json = await self._auth_lib.post(url=url,
+                                                  headers=headers, data=payload)
+
+        return response_json
+
     async def _lock_control(self, device: Device, action: str) -> None:
         await self._auth_lib.refresh_if_should()
 
@@ -549,5 +579,31 @@ class BaseService:
                                                   json=payload)
 
         check_for_errors_standard(response_json)
+
+        return response_json
+
+    async def _get_sync_data(self) -> List[Device]:
+        await self._auth_lib.refresh_if_should()
+
+        headers = self._auth_lib.token.headers
+
+        headers.pop("Cookie")
+
+        url = f"{BASE_URL}/check/syncDataPage"
+
+        userinfo = USER_INFO
+
+        data = {
+            "lastUpdateDate": "1694032433864",
+            "operatorUid": f"{self._auth_lib.token.uid}",
+            "pageNo": "1",
+            "uniqueid": f"{UNIQUE_ID}",
+            "userInfo": json.dumps(userinfo, separators=(',', ':'))
+        }
+
+        response_json = await self._auth_lib.post(url, headers=headers, data=data)
+        BaseService._user_info = response_json['userSettings']
+        BaseService._devices = [Device(device) for device in response_json['keyInfos']]
+        BaseService._lock_groups = [Group(group) for group in response_json['keyGroups']]
 
         return response_json
