@@ -22,7 +22,7 @@ import time
 from typing import Dict, Any, List, Optional, Set
 from inspect import iscoroutinefunction
 
-from .const import PHONE_SYSTEM_TYPE, APP_VERSION, SC, APP_VER, SV, PHONE_ID, APP_NAME, OLIVE_APP_ID, APP_INFO
+from .const import PHONE_SYSTEM_TYPE, APP_VERSION, SC, APP_VER, SV, PHONE_ID, APP_NAME, OLIVE_APP_ID, APP_INFO, LOGIN_HEADERS
 from .crypto import olive_create_signature
 from .payload_factory import olive_create_user_info_payload
 from .services.base_service import BaseService

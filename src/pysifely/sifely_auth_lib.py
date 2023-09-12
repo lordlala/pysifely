@@ -1,12 +1,14 @@
 import asyncio
+import hashlib
 import logging
+import json
 import time
 from typing import Dict, Any, Optional
 
 import aiohttp
 from aiohttp import TCPConnector, ClientSession, ContentTypeError
 
-from .const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO, CONTENTTYPE
+from .const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO, CONTENTTYPE, LOGIN_HEADERS, BASE_URL
 from .exceptions import UnknownApiError, AccessTokenError, TwoFactorAuthenticationEnabled
 from .utils import create_password, check_for_errors_standard
 
@@ -77,25 +79,31 @@ class PySifelyAuthLib:
     async def get_token_with_username_password(self, username, password) -> Token:
         self._username = username
         self._password = password
+
+        headers = LOGIN_HEADERS
+
+        url = f"{BASE_URL}/user/login"
+        
+        hashpass = hashlib.md5(password.encode('utf8')).hexdigest()
+
         login_payload = {
-            "username": self._username,
-            "password": self._password
+            
+            'loginType': 1,
+            'password': hashpass,
+            'platId': 2,
+            'uniqueid': '65BDFAFE-56FF-42FE-AAA2-DD8A484CFC58',
+            'username': username
+            
         }
 
-        headers = {
-            'Content-Type': CONTENTTYPE,
-            'User-Agent': APP_INFO,
-            #'X-API-Key': API_KEY,
-        }
-
-        response_json = await self.post("https://pro-server.sifely.com/login", headers=headers,
-                                        json=login_payload)
+        response_json = await self.post(url=url, headers=headers,
+                                        data=login_payload)
 
         if response_json.get('errorCode') is not None:
             _LOGGER.error(f"Unable to login with response from Sifely: {response_json}")
             raise UnknownApiError(response_json)
 
-        self.token = Token(response_json['token'])
+        self.token = Token(response_json['accessToken'])
         await self.token_callback(self.token)
         return self.token
 
@@ -178,8 +186,7 @@ class PySifelyAuthLib:
                     data[key] = self.SANITIZE_STRING
         return data
 
-
-    async def post(self, url, json=None, headers=None, data=None) -> Dict[Any, Any]:
+    async def post(self, url, json=None, headers=None, data=None, params=None) -> Dict[Any, Any]:
         async with ClientSession(connector=TCPConnector(ttl_dns_cache=(30 * 60))) as _session:
             response = await _session.post(url, json=json, headers=headers, data=data)
             # Relocated these below as the sanitization seems to modify the data before it goes to the post.
@@ -188,6 +195,7 @@ class PySifelyAuthLib:
             _LOGGER.debug(f"json: {self.sanitize(json)}")
             _LOGGER.debug(f"headers: {self.sanitize(headers)}")
             _LOGGER.debug(f"data: {self.sanitize(data)}")
+            _LOGGER.debug(f"params: {self.sanitize(params)}")
             # Log the response.json() if it exists, if not log the response.
             try:
                 response_json = await response.json()
