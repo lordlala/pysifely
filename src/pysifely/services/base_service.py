@@ -570,20 +570,18 @@ class BaseService:
     async def _lock_control(self, device: Device, action: str) -> None:
         await self._auth_lib.refresh_if_should()
 
-        headers = {
-            'Accept' : 'application/json, text/plain, */*',
-            'Accept-Encoding' : 'gzip, deflate, br',
-            'Accept-Language' : 'en-US,en;q=0.9',
-            'Authorization': "Bearer {}".format(self._auth_lib.token.access_token),
-            'Content-Type' : 'application/x-www-form-urlencoded'
-        }
-
+        headers = self._auth_lib.token.headers
+        headers['Cookie'] = "JSESSIONID=066E60742CE00605710AEE7EA314EF1E"
+        headers["signature"] = "wtCR4A9Ce7rrvbSz1+Wpvn5fFs2pKOkBHGBc5khTMKM="
+        
         payload = {
-            "lockId": device.lockId,
-            "date": device.date
+            "d": f"{device.date}",
+            "keyId": f"{device.keyId}",
+            "lockId": f"{device.lockId}",
+            "operatorUid": f"{device.uid}",
         }
 
-        url = "https://pro-server.sifely.com/v3/lock/{}".format(action.lower())
+        url = f"{BASE_URL}/lock/room/lock"
 
         response_json = await self._auth_lib.post(url, headers=headers, data=payload)
 

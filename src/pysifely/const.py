@@ -9,7 +9,6 @@ APP_VERSION = "2.18.43"
 APP_VER = ""
 APP_NAME = ""
 BASE_URL = "https://servlet.ttlock.com"
-#BASE_URL = "https://api.ttlock.com"
 PHONE_ID = str(uuid.uuid4())
 APP_INFO = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188'
 CONTENTTYPE = 'application/json;charset=UTF-8'
@@ -24,8 +23,8 @@ LOGIN_HEADERS = {
     'Expires': '-1',
     'appId': APP_ID,
     'appSecret': APP_SECRET,
-    'platform': 'iOS-2.2.0',
-    'User-Agent': 'sifely/2.2.0 (iPhone; iOS 16.6.1; Scale/3.00)',
+    'platform': 'iOS-2.3.0',
+    'User-Agent': 'sifely/2.3.0 (iPhone; iOS 16.6.1; Scale/3.00)',
     'Connection': 'keep-alive',
     'Content-Type': 'application/x-www-form-urlencoded',
     'Version': '2.2',
@@ -34,7 +33,8 @@ LOGIN_HEADERS = {
     'language': 'en',
     'Accept-Language': "en;q=1",
     "Pragma": "no-cache",
-    "Cache-Control": "no-cache,no-store"
+    "Cache-Control": "no-cache,no-store",
+    "Accept-Encoding": "gzip, deflate, br"
 }
 
 USER_INFO = {
