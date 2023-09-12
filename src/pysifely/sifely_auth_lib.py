@@ -63,6 +63,7 @@ class PySifelyAuthLib:
         self.two_factor_type = None
         self.refresh_lock = asyncio.Lock()
         self.token_callback = token_callback
+        self._uid = None
 
     @classmethod
     async def create(cls, username=None, password=None, token: Token = None, token_callback=None):
@@ -104,6 +105,7 @@ class PySifelyAuthLib:
             raise UnknownApiError(response_json)
 
         self.token = Token(response_json['accessToken'])
+        self._uid = response_json['uid']
         await self.token_callback(self.token)
         return self.token
 

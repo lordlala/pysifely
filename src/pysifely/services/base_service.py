@@ -45,10 +45,15 @@ class BaseService:
 
         headers = LOGIN_HEADERS
         headers['accessToken'] = self._auth_lib.token.access_token
+        headers['operatorUid'] = f"{self._auth_lib._uid}"
 
         url = f"{BASE_URL}/user/getUserInfo"
 
-        response_json = await self._auth_lib.get(url, headers=headers)
+        data = {
+            'operatorUid': f"{self._auth_lib._uid}"
+        }
+
+        response_json = await self._auth_lib.post(url, headers=headers, data=data)
 
         return response_json
 
