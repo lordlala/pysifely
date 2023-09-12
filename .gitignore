@@ -1,1 +1,16 @@
+tests/*
 test.py
+src/pysifely/__pycache__/*
+src/pysifely/__pycache__/__init__.cpython-311.pyc
+src/pysifely/__pycache__/const.cpython-311.pyc
+src/pysifely/__pycache__/crypto.cpython-311.pyc
+src/pysifely/__pycache__/exceptions.cpython-311.pyc
+src/pysifely/__pycache__/payload_factory.cpython-311.pyc
+src/pysifely/__pycache__/sifely_auth_lib.cpython-311.pyc
+src/pysifely/__pycache__/types.cpython-311.pyc
+src/pysifely/__pycache__/utils.cpython-311.pyc
+src/pysifely/__pycache__/version.cpython-311.pyc
+src/pysifely/services/__pycache__/base_service.cpython-311.pyc
+src/pysifely/services/__pycache__/gateway_service.cpython-311.pyc
+src/pysifely/services/__pycache__/lock_service.cpython-311.pyc
+src/pysifely/services/__pycache__/update_manager.cpython-311.pyc
