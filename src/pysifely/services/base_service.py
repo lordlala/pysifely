@@ -441,6 +441,42 @@ class BaseService:
 
         return BaseService._devices
 
+    async def _get_gateway_lock_list(self, device: Device, gateway: Device):
+        await self._auth_lib.refresh_if_should()
+        
+        headers = self._auth_lib.token.headers
+        
+        payload = {
+            "d" : f"{round(time.time())}",
+            "pageNo" : "1",
+            "operatorUid": f"{self._auth_lib.token.uid}",
+            "plugId": f"{gateway.plugId}"
+            
+        }
+        
+        url = f"{BASE_URL}/plug/getLockList"
+
+        response_json = await self._auth_lib.post(url=url,
+                                                  headers=headers, data=payload)
+
+        check_for_errors_standard(response_json)
+
+        if len(response_json["list"]) != 0:
+
+            try:
+                total = response_json["total"]
+            except:
+                total = len(response_json['list'])
+
+            for index in range(total):
+                response_json["list"][index]['product_type'] = "Lock"
+                response_json["list"][index]['mac'] = response_json["list"][index]['lockMac']
+                index = index + 1
+                
+        BaseService._devices = [Device(device) for device in response_json['list']]
+
+        return BaseService._devices        
+
     async def _get_lock_groups(self, device: Device):
         devices = []
 
