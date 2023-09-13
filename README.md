@@ -15,7 +15,7 @@ async def async_main():
     await client._service.get_user_profile()
     print(await client.unique_device_ids)
     #await client._service.get_object_list()
-    lock = LockService(client._auth_lib)
+    lock = LockService(client)
     locks = await lock.get_locks()
     await lock.unlock(locks[0])
 
