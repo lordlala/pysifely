@@ -10,7 +10,7 @@ from aiohttp import TCPConnector, ClientSession, ContentTypeError
 
 from .const import API_KEY, PHONE_ID, APP_NAME, APP_VERSION, SC, SV, PHONE_SYSTEM_TYPE, APP_VER, APP_INFO, CONTENTTYPE, LOGIN_HEADERS, BASE_URL
 from .exceptions import UnknownApiError, AccessTokenError, TwoFactorAuthenticationEnabled
-from .utils import create_password, check_for_errors_standard
+from .utils import create_password, check_for_errors_standard, parse_dict_cookies
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,6 +128,9 @@ class PySifelyAuthLib:
         headers = LOGIN_HEADERS
         headers['accessToken'] = response_json['accessToken']
         headers['operatorUid'] = f"{self.token.uid}"
+        if "Set-Cookie" in response_json['headers']:
+            cookies = parse_dict_cookies(response_json['headers']['Set-Cookie'])
+            headers['Cookie'] = cookies
         self.token.headers = headers
 
         return self.token
@@ -211,8 +214,9 @@ class PySifelyAuthLib:
                     data[key] = self.SANITIZE_STRING
         return data
 
-    async def post(self, url, json=None, headers=None, data=None) -> Dict[Any, Any]:
+    async def post(self, url, cookies={}, json=None, headers=None, data=None) -> Dict[Any, Any]:
         async with ClientSession(connector=TCPConnector(ttl_dns_cache=(30 * 60))) as _session:
+            _session.cookie_jar.update_cookies(cookies)
             response = await _session.post(url, json=json, headers=headers, data=data)
             # Relocated these below as the sanitization seems to modify the data before it goes to the post.
             _LOGGER.debug("Request:")
@@ -223,10 +227,11 @@ class PySifelyAuthLib:
             # Log the response.json() if it exists, if not log the response.
             try:
                 response_json = await response.json()
+                response_json["headers"] = response.headers
                 _LOGGER.debug(f"Response Json: {response_json}")
             except ContentTypeError:
                 _LOGGER.debug(f"Response: {response}")
-            return await response.json()
+            return response_json
 
     async def get(self, url, headers=None, params=None) -> Dict[Any, Any]:
         async with ClientSession(connector=TCPConnector(ttl_dns_cache=(30 * 60))) as _session:

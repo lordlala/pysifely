@@ -3,7 +3,7 @@ import time
 from typing import List, Tuple, Any, Dict, Optional
 
 from ..const import PHONE_SYSTEM_TYPE, APP_ID, APP_SECRET, APP_VERSION, APP_VER, BASE_URL, PHONE_ID, APP_NAME, LOGIN_HEADERS, OLIVE_APP_ID, APP_INFO, SC, SV, UNIQUE_ID, USER_INFO
-from ..crypto import olive_create_signature
+from ..crypto import olive_create_signature, generate_signature
 from ..payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
     olive_create_hms_get_payload, ford_create_payload, olive_create_get_payload, olive_create_post_payload, \
     olive_create_user_info_payload
@@ -64,6 +64,7 @@ class BaseService:
         return response_json
 
     async def get_object_list(self) -> List[Device]:
+
         await self._auth_lib.refresh_if_should()
 
         devices = []
@@ -575,26 +576,22 @@ class BaseService:
         await self._auth_lib.refresh_if_should()
 
         headers = self._auth_lib.token.headers
-        headers['Cookie'] = "JSESSIONID=066E60742CE00605710AEE7EA314EF1E"
-        headers["signature"] = "wtCR4A9Ce7rrvbSz1+Wpvn5fFs2pKOkBHGBc5khTMKM="
+        #headers['Cookie'] = json.dumps({"JSESSIONID": "00AA4FF11F48FDD683B02285894706F8"})
+        #headers["signature"] = "MTU2LDE1NiwxNDgsMTU2LDE1NywxNTEsMTUxLDE0NiwxNDgsNTc="#f"{generate_signature(lockKey=device.lockKey)}"
+
+        cookies = {"JSESSIONID": "00AA4FF11F48FDD683B02285894706F8"}
 
         payload = {
             "d": device.date,
             "keyId": device.keyId,
             "lockId": device.lockId,
-            "operatorUid": device.uid,
-        }
-
-        payload = {
-            "clientId": f"{APP_ID}",
-            "accessToken": f"{self._auth_lib.token.access_token}",
-            "lockId": device.lockId,
-            "date": round(time.time())
+            "operatorUid": f"{self._auth_lib.token.uid}"
         }
 
         url = f"{BASE_URL}/lock/room/lock"
 
-        response_json = await self._auth_lib.post(url, headers=headers, data=payload)
+        #response_json = requests.post(url=url, headers=headers, params=payload, cookies=cookies)
+        response_json = await self._auth_lib.post(url, headers=headers, data=payload, cookies=cookies)
 
         check_for_errors_lock(response_json)
 
@@ -624,10 +621,9 @@ class BaseService:
 
         return response_json
 
-    async def _get_sync_data(self, device: Device):
-        await self._auth_lib.refresh_if_should()
+    async def _get_sync_data(self, device: Device) -> Dict[Any, Any]:
 
-        headers = self._auth_lib.token.headers
+        headers = LOGIN_HEADERS
 
         headers.pop("Cookie")
 
@@ -637,13 +633,13 @@ class BaseService:
 
         data = {
             "lastUpdateDate": "1694032433864",
-            "operatorUid": f"{self._auth_lib.token.uid}",
+            "operatorUid": f"{device._auth_lib.token.uid}",
             "pageNo": "1",
             "uniqueid": f"{UNIQUE_ID}",
             "userInfo": json.dumps(userinfo, separators=(',', ':'))
         }
 
-        response_json = await self._auth_lib.post(url, headers=headers, data=data)
+        response_json = await device._auth_lib.post(url, headers=headers, data=data)
         BaseService._user_info = response_json['userSettings']
         BaseService._devices = [Device(device) for device in response_json['keyInfos']]
         BaseService._lock_groups = [Group(group) for group in response_json['keyGroups']]
