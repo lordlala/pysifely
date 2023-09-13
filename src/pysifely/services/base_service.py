@@ -19,7 +19,11 @@ class BaseService:
     _headers = None
 
     def __init__(self, auth_lib: PySifelyAuthLib):
-        self._auth_lib = auth_lib
+        try:
+            if auth_lib.should_refresh == "false":
+                self._auth_lib = auth_lib
+        except Exception:
+            self._auth_lib = auth_lib._auth_lib
 
     async def set_push_info(self, on: bool) -> None:
         await self._auth_lib.refresh_if_should()
@@ -61,11 +65,11 @@ class BaseService:
 
     async def get_object_list(self) -> List[Device]:
         await self._auth_lib.refresh_if_should()
-        
+
         devices = []
-        
+
         devices += await self._get_gateway_list(Device)
-        
+
         devices += await self._get_sync_data(Device)
 
         return devices
@@ -420,7 +424,7 @@ class BaseService:
             "pageSize" : "10",
             "operatorUid": f"{self._auth_lib.token.uid}"
         }
-        
+
         url = f"{BASE_URL}/plug/list"
 
         response_json = await self._auth_lib.post(url=url,
@@ -436,24 +440,24 @@ class BaseService:
                 response_json["list"][index]['product_type'] = "gateway"
                 response_json["list"][index]['mac'] = response_json["list"][index]['networkMac']
                 index = index + 1
-                
+
         BaseService._devices = [Device(device) for device in response_json['list']]
 
         return BaseService._devices
 
     async def _get_gateway_lock_list(self, device: Device, gateway: Device):
         await self._auth_lib.refresh_if_should()
-        
+
         headers = self._auth_lib.token.headers
-        
+
         payload = {
             "d" : f"{round(time.time())}",
             "pageNo" : "1",
             "operatorUid": f"{self._auth_lib.token.uid}",
             "plugId": f"{gateway.plugId}"
-            
+
         }
-        
+
         url = f"{BASE_URL}/plug/getLockList"
 
         response_json = await self._auth_lib.post(url=url,
@@ -472,10 +476,10 @@ class BaseService:
                 response_json["list"][index]['product_type'] = "Lock"
                 response_json["list"][index]['mac'] = response_json["list"][index]['lockMac']
                 index = index + 1
-                
+
         BaseService._devices = [Device(device) for device in response_json['list']]
 
-        return BaseService._devices        
+        return BaseService._devices
 
     async def _get_lock_groups(self, device: Device):
         devices = []
@@ -573,12 +577,19 @@ class BaseService:
         headers = self._auth_lib.token.headers
         headers['Cookie'] = "JSESSIONID=066E60742CE00605710AEE7EA314EF1E"
         headers["signature"] = "wtCR4A9Ce7rrvbSz1+Wpvn5fFs2pKOkBHGBc5khTMKM="
-        
+
         payload = {
-            "d": f"{device.date}",
-            "keyId": f"{device.keyId}",
-            "lockId": f"{device.lockId}",
-            "operatorUid": f"{device.uid}",
+            "d": device.date,
+            "keyId": device.keyId,
+            "lockId": device.lockId,
+            "operatorUid": device.uid,
+        }
+
+        payload = {
+            "clientId": f"{APP_ID}",
+            "accessToken": f"{self._auth_lib.token.access_token}",
+            "lockId": device.lockId,
+            "date": round(time.time())
         }
 
         url = f"{BASE_URL}/lock/room/lock"
