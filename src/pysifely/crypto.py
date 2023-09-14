@@ -3,7 +3,7 @@ import hmac
 import urllib.parse
 from typing import Dict, Union, Any
 
-from .const import FORD_APP_SECRET, OLIVE_SIGNING_SECRET
+from .const import APP_SECRET, FORD_APP_SECRET, OLIVE_SIGNING_SECRET
 
 
 def olive_create_signature(payload: Union[Dict[Any, Any], str], access_token: str) -> str:
@@ -29,6 +29,6 @@ def ford_create_signature(url_path: str, request_method: str, payload: Dict[Any,
         string_buf += entry + "=" + payload[entry] + "&"
 
     string_buf = string_buf[:-1]
-    string_buf += FORD_APP_SECRET
+    string_buf += APP_SECRET
     urlencoded = urllib.parse.quote_plus(string_buf)
     return hashlib.md5(urlencoded.encode()).hexdigest()

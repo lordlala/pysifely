@@ -5,7 +5,7 @@ from typing import List, Tuple, Any, Dict, Optional
 from ..const import PHONE_SYSTEM_TYPE, APP_ID, APP_SECRET, APP_VERSION, APP_VER, BASE_URL, PHONE_ID, APP_NAME, LOGIN_HEADERS, OLIVE_APP_ID, APP_INFO, SC, SV, UNIQUE_ID, USER_INFO
 from ..crypto import olive_create_signature
 from ..payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
-    olive_create_hms_get_payload, ford_create_payload, olive_create_get_payload, olive_create_post_payload, \
+    olive_create_hms_get_payload, ford_create_payload, ford_create_signature, olive_create_get_payload, olive_create_post_payload, \
     olive_create_user_info_payload
 from ..types import PropertyIDs, Device, Group
 from ..utils import check_for_errors_standard, check_for_errors_hms, check_for_errors_lock, \
@@ -570,9 +570,11 @@ class BaseService:
     async def _lock_control(self, device: Device, action: str) -> None:
         await self._auth_lib.refresh_if_should()
 
+        url = f"{BASE_URL}/lock/room/lock"
+        url_path = "/lock/room/lock"
+
         headers = self._auth_lib.token.headers
         headers['Cookie'] = "JSESSIONID=066E60742CE00605710AEE7EA314EF1E"
-        headers["signature"] = "wtCR4A9Ce7rrvbSz1+Wpvn5fFs2pKOkBHGBc5khTMKM="
         
         payload = {
             "d": f"{device.date}",
@@ -580,8 +582,8 @@ class BaseService:
             "lockId": f"{device.lockId}",
             "operatorUid": f"{device.uid}",
         }
-
-        url = f"{BASE_URL}/lock/room/lock"
+        
+        signature = ford_create_signature(url_path=url_path, request_method="post", payload=payload)
 
         response_json = await self._auth_lib.post(url, headers=headers, data=payload)
 
