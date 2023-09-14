@@ -3,7 +3,7 @@ import time
 from typing import List, Tuple, Any, Dict, Optional
 
 from ..const import PHONE_SYSTEM_TYPE, APP_ID, APP_SECRET, APP_VERSION, APP_VER, BASE_URL, PHONE_ID, APP_NAME, LOGIN_HEADERS, OLIVE_APP_ID, APP_INFO, SC, SV, UNIQUE_ID, USER_INFO
-from ..crypto import olive_create_signature
+from ..crypto import olive_create_signature, generate_signature
 from ..payload_factory import olive_create_hms_patch_payload, olive_create_hms_payload, \
     olive_create_hms_get_payload, ford_create_payload, ford_create_signature, olive_create_get_payload, olive_create_post_payload, \
     olive_create_user_info_payload
@@ -19,7 +19,11 @@ class BaseService:
     _headers = None
 
     def __init__(self, auth_lib: PySifelyAuthLib):
-        self._auth_lib = auth_lib
+        try:
+            if auth_lib.should_refresh == "false":
+                self._auth_lib = auth_lib
+        except Exception:
+            self._auth_lib = auth_lib._auth_lib
 
     async def set_push_info(self, on: bool) -> None:
         await self._auth_lib.refresh_if_should()
@@ -60,12 +64,13 @@ class BaseService:
         return response_json
 
     async def get_object_list(self) -> List[Device]:
+
         await self._auth_lib.refresh_if_should()
-        
+
         devices = []
-        
+
         devices += await self._get_gateway_list(Device)
-        
+
         devices += await self._get_sync_data(Device)
 
         return devices
@@ -420,7 +425,7 @@ class BaseService:
             "pageSize" : "10",
             "operatorUid": f"{self._auth_lib.token.uid}"
         }
-        
+
         url = f"{BASE_URL}/plug/list"
 
         response_json = await self._auth_lib.post(url=url,
@@ -436,24 +441,24 @@ class BaseService:
                 response_json["list"][index]['product_type'] = "gateway"
                 response_json["list"][index]['mac'] = response_json["list"][index]['networkMac']
                 index = index + 1
-                
+
         BaseService._devices = [Device(device) for device in response_json['list']]
 
         return BaseService._devices
 
     async def _get_gateway_lock_list(self, device: Device, gateway: Device):
         await self._auth_lib.refresh_if_should()
-        
+
         headers = self._auth_lib.token.headers
-        
+
         payload = {
             "d" : f"{round(time.time())}",
             "pageNo" : "1",
             "operatorUid": f"{self._auth_lib.token.uid}",
             "plugId": f"{gateway.plugId}"
-            
+
         }
-        
+
         url = f"{BASE_URL}/plug/getLockList"
 
         response_json = await self._auth_lib.post(url=url,
@@ -472,10 +477,10 @@ class BaseService:
                 response_json["list"][index]['product_type'] = "Lock"
                 response_json["list"][index]['mac'] = response_json["list"][index]['lockMac']
                 index = index + 1
-                
+
         BaseService._devices = [Device(device) for device in response_json['list']]
 
-        return BaseService._devices        
+        return BaseService._devices
 
     async def _get_lock_groups(self, device: Device):
         devices = []
@@ -576,16 +581,22 @@ class BaseService:
         headers = self._auth_lib.token.headers
         headers['Cookie'] = "JSESSIONID=066E60742CE00605710AEE7EA314EF1E"
         
-        payload = {
-            "d": f"{device.date}",
-            "keyId": f"{device.keyId}",
-            "lockId": f"{device.lockId}",
-            "operatorUid": f"{device.uid}",
-        }
-        
-        signature = ford_create_signature(url_path=url_path, request_method="post", payload=payload)
+        #headers['Cookie'] = json.dumps({"JSESSIONID": "00AA4FF11F48FDD683B02285894706F8"})
+        #headers["signature"] = "MTU2LDE1NiwxNDgsMTU2LDE1NywxNTEsMTUxLDE0NiwxNDgsNTc="#f"{generate_signature(lockKey=device.lockKey)}"
 
-        response_json = await self._auth_lib.post(url, headers=headers, data=payload)
+        cookies = {"JSESSIONID": "00AA4FF11F48FDD683B02285894706F8"}
+
+        payload = {
+            "d": device.date,
+            "keyId": device.keyId,
+            "lockId": device.lockId,
+            "operatorUid": f"{self._auth_lib.token.uid}"
+        }
+
+        url = f"{BASE_URL}/lock/room/lock"
+
+        #response_json = requests.post(url=url, headers=headers, params=payload, cookies=cookies)
+        response_json = await self._auth_lib.post(url, headers=headers, data=payload, cookies=cookies)
 
         check_for_errors_lock(response_json)
 
@@ -615,10 +626,9 @@ class BaseService:
 
         return response_json
 
-    async def _get_sync_data(self, device: Device):
-        await self._auth_lib.refresh_if_should()
+    async def _get_sync_data(self, device: Device) -> Dict[Any, Any]:
 
-        headers = self._auth_lib.token.headers
+        headers = LOGIN_HEADERS
 
         headers.pop("Cookie")
 
@@ -628,13 +638,13 @@ class BaseService:
 
         data = {
             "lastUpdateDate": "1694032433864",
-            "operatorUid": f"{self._auth_lib.token.uid}",
+            "operatorUid": f"{device._auth_lib.token.uid}",
             "pageNo": "1",
             "uniqueid": f"{UNIQUE_ID}",
             "userInfo": json.dumps(userinfo, separators=(',', ':'))
         }
 
-        response_json = await self._auth_lib.post(url, headers=headers, data=data)
+        response_json = await device._auth_lib.post(url, headers=headers, data=data)
         BaseService._user_info = response_json['userSettings']
         BaseService._devices = [Device(device) for device in response_json['keyInfos']]
         BaseService._lock_groups = [Group(group) for group in response_json['keyGroups']]

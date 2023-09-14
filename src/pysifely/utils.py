@@ -53,3 +53,16 @@ def return_event_for_device(device: Device, events: List[Event]) -> Optional[Eve
 
 def create_pid_pair(pid_enum: PropertyIDs, value: str) -> Dict[str, str]:
     return {"pid": pid_enum.value, "pvalue": value}
+
+def parse_dict_cookies(cookies):
+    result = {}
+    for item in cookies.split(';'):
+        item = item.strip()
+        if not item:
+            continue
+        if '=' not in item:
+            result[item] = None
+            continue
+        name, value = item.split('=', 1)
+        result[name] = value
+    return result
