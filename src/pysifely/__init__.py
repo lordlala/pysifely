@@ -24,11 +24,6 @@ from .services.base_service import BaseService
 from .services.gateway_service import GatewayService
 from .services.lock_service import LockService
 from .types import MacTypes, Map
-#from wyzeapy.services.hms_service import HMSService
-#from wyzeapy.services.lock_service import LockService
-#from wyzeapy.services.sensor_service import SensorService
-#from wyzeapy.services.switch_service import SwitchService
-#from wyzeapy.services.thermostat_service import ThermostatService
 from .utils import check_for_errors_standard
 from .sifely_auth_lib import PySifelyAuthLib, Token
 from .exceptions import TwoFactorAuthenticationEnabled
